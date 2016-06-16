@@ -99,32 +99,34 @@ return:
 	iret
 
 align 8
-
 gdt:
 gdt_null:
 	dq 0
 gdt_code32:
-	dq 0x00c09a000000ffff
+	dq 0x00cf9a000000ffff
 gdt_data32:
-	dq 0x00c092000000ffff
+	dq 0x00cf92000000ffff
 gdt_code16:
 	dq 0x000f9a000000ffff
 gdt_data16:
 	dq 0x000f92000000ffff
 
+align 8
 gdt_ptr:
 	dw $-gdt-1
 	dd LINEAR_ADDR(gdt)
 
+align 8
 idt_ptr:
 	dw 0
 	dd 0
 
+align 8
 idt_ptr_real:
 	dw 0x3ff		; 256 entries, 4b each = 1K
 	dd 0
 
-align 1
+align 8
 handle_0x88:
 	mov ax, [cs:OFFSET(mem_size)]
 	iret

@@ -68,7 +68,11 @@ l:
 	int 0x10
 
 	cli
-	
+
+	mov ax, 0xb800
+	mov es, ax
+	mov byte [es:0], 'b'
+
 	mov ax, 0
 	mov ss, ax
 	mov sp, 0x7c00
