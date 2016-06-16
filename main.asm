@@ -27,6 +27,10 @@ start:
 	mov ax, 0
 	mov ss, ax
 	mov sp, 0x7c00
+
+	; do this first
+	init_vgabios
+	cli
 	
 	; get memory size
 	mov al, 0x17
@@ -52,23 +56,17 @@ start:
 	; install empty interrupt handlers that only return error
 	mov ax, 0
 	mov es, ax
-	mov di, 0x5*4
+	mov di, 0x11*4
 l:
 	mov word [es:di], empty_int_handler-int_handler
 	mov word [es:di+2], SEG_INT_CODE16
 	add di, 4
 	cmp di, 0x30*4
 	jbe l
-	
-	; prevent some VGA BIOSes from skipping installation
-	mov word [es:0x10*4], 0
-	mov word [es:0x10*4+2], 0
 
-	init_vgabios
-	
 	mov ax, 3
 	int 0x10
-	
+
 	cli
 	
 	mov ax, 0
