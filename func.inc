@@ -62,9 +62,9 @@ protected:
 	mov es, ax
 
 	mov esi, [ds:ebp+0x12]
-	and esi, 0xffffff
+	; and esi, 0xffffff
 	mov edi, [ds:ebp+0x1a]
-	and edi, 0xffffff
+	; and edi, 0xffffff
 	
 	cld
 	rep movsb
