@@ -1,10 +1,10 @@
 org 0
 %define SEG_MAIN_CODE16 0x800
-%define REAL_SIZE 0xa00
-%define PROTECTED_SIZE 0x80000
-%define UNCOMPRESSED_SIZE 0x1000000
-%define RAMDISK_SIZE 0xe123f	; accurate
-%define RAMDISK_ADDR 0xf1e000
+%define REAL_SIZE 0x1600
+%define PROTECTED_SIZE (1048576*4)
+; %define UNCOMPRESSED_SIZE 0x1000000
+%define RAMDISK_SIZE 922176	; accurate
+%define RAMDISK_ADDR 0xe00000
 
 bits 16
 main:
@@ -76,8 +76,6 @@ l:
 	mov ax, 0
 	mov ss, ax
 	mov sp, 0x7c00
-	mov ax, 0
-	mov es, ax
 	
 	; install int 0x15
 	mov ax, 0
@@ -90,14 +88,26 @@ l:
 	mov si, mem_table
 	mov ebx, [cs:images_base]
 	
-	mov ecx, REAL_SIZE
-	mov edx, 0x90000
-	call memset_0
+	cmp ebx, 0x1000000
+	jae skip
+
+	mov ah, 0xff
+	mov ecx, (REAL_SIZE+PROTECTED_SIZE+RAMDISK_SIZE+1)/2
+	mov [cs:mem_src], ebx
+	add ebx, 0x1000000
+	mov [cs:mem_dst], ebx
+	mov [cs:images_base], ebx
+	int 0x15
+
+skip:
+	; mov ecx, REAL_SIZE
+	; mov edx, 0x90000
+	; call memset_0
 	
 	mov ah, 0xff
 	mov ecx, REAL_SIZE/2
 	mov dword [cs:mem_src], ebx
-	mov dword [cs:mem_dst], 0x90000
+	mov dword [cs:mem_dst], 0x10000
 	int 0x15
 	
 	; mov ecx, PROTECTED_SIZE
@@ -108,7 +118,7 @@ l:
 	mov ecx, PROTECTED_SIZE/2
 	add ebx, REAL_SIZE
 	mov dword [cs:mem_src], ebx
-	mov dword [cs:mem_dst], 0x10000
+	mov dword [cs:mem_dst], 0x100000
 	int 0x15
 	
 	mov ah, 0xff
@@ -134,6 +144,22 @@ copy_cmd:
 	test al, al
 	jnz copy_cmd
 
+; disable PIC; I don't know
+	mov al,0x10
+	out 0x20,al
+	out 0xa0,al
+	mov al,32
+	out 0x21,al
+	out 0xa1,al
+	mov al,4
+	out 0x21,al
+	mov al,2
+	out 0xa1,al
+	mov al,0xff
+	out 0xa1,al
+	out 0x21,al
+
+; go
 	jmp SEG_INT_CODE16:enter_kernel-int_handler
 
 boot_cmd:	db "root=/dev/ram0", 0

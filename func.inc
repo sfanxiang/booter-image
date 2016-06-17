@@ -144,51 +144,11 @@ empty_int_handler:
 
 
 ; this function is copied with interrupt handlers
+bits 16
 enter_kernel:
-	in al, 0x92
-	or al, 2
-	out 0x92, al
-
-	lgdt [cs:OFFSET(gdt_ptr)]
-	lidt [cs:OFFSET(idt_ptr)]
-
-	mov eax, cr0
-	or eax, 1
-	mov cr0, eax
-	
-	jmp dword SEL_CODE32:LINEAR_ADDR(.protected)
-
-bits 32
-.protected:
-	mov ax, SEL_DATA32
-	mov ds, ax
-	mov es, ax
-	xor ax, ax
-	mov edi, 0x1000
-	mov ecx, 0x10000-0x1000
-	
-	cld
-	rep stosb
-
-	jmp SEL_CODE16:LINEAR_ADDR(.go_real)
-
-bits 16
-.go_real:
-	mov eax, SEL_DATA16
-	mov ds, eax
-	mov es, eax
-
-	mov eax, cr0
-	and eax, 0x7ffffffe
-	mov cr0, eax
-
-	jmp SEG_CODE16:OFFSET(.return)
-
-bits 16
-.return:
 	lidt [cs:OFFSET(idt_ptr_real)]
 
-	mov ax, 0x9000
+	mov ax, 0x1000
 	mov ds, ax
 	mov es, ax
 	mov fs, ax
@@ -203,7 +163,7 @@ bits 16
 	mov dword [ds:0x218], RAMDISK_ADDR	; ramdisk_image
 	mov dword [ds:0x21c], RAMDISK_SIZE	; ramdisk_size
 
-	jmp 0x9020:0
+	jmp 0x1020:0
 
 int_handler_end:
 
