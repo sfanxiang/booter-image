@@ -1,10 +1,10 @@
 org 0
 %define SEG_MAIN_CODE16 0x800
-%define REAL_SIZE 0x1600
-%define PROTECTED_SIZE (1048576*4)
+%define REAL_SIZE 0x3e00
+%define PROTECTED_SIZE (1048576*8)
 ; %define UNCOMPRESSED_SIZE 0x1000000
-%define RAMDISK_SIZE 922176	; accurate
-%define RAMDISK_ADDR 0xe00000
+; no more ramdisks
+%define RAMDISK_SIZE 0	; accurate
 
 bits 16
 main:
@@ -88,13 +88,18 @@ l:
 	mov si, mem_table
 	mov ebx, [cs:images_base]
 	
-	cmp ebx, 0x1000000
-	jae skip
+	cmp ebx, 0x1000000+REAL_SIZE+PROTECTED_SIZE+RAMDISK_SIZE+1
+	ja skip
+
+	; notify
+	mov ax, 0xb800
+	mov ds, ax
+	mov byte [ds:0], 'm'
 
 	mov ah, 0xff
 	mov ecx, (REAL_SIZE+PROTECTED_SIZE+RAMDISK_SIZE+1)/2
 	mov [cs:mem_src], ebx
-	add ebx, 0x1000000
+	add ebx, REAL_SIZE+PROTECTED_SIZE+RAMDISK_SIZE+1
 	mov [cs:mem_dst], ebx
 	mov [cs:images_base], ebx
 	int 0x15
@@ -120,13 +125,8 @@ skip:
 	mov dword [cs:mem_src], ebx
 	mov dword [cs:mem_dst], 0x100000
 	int 0x15
-	
-	mov ah, 0xff
-	mov ecx, (RAMDISK_SIZE+1)/2
+
 	add ebx, PROTECTED_SIZE
-	mov dword [cs:mem_src], ebx
-	mov dword [cs:mem_dst], RAMDISK_ADDR
-	int 0x15
 	
 	; mov ecx, UNCOMPRESSED_SIZE
 	; mov edx, 0x100000
@@ -144,25 +144,25 @@ copy_cmd:
 	test al, al
 	jnz copy_cmd
 
-; disable PIC; I don't know
-	mov al,0x10
-	out 0x20,al
-	out 0xa0,al
-	mov al,32
-	out 0x21,al
-	out 0xa1,al
-	mov al,4
-	out 0x21,al
-	mov al,2
-	out 0xa1,al
-	mov al,0xff
-	out 0xa1,al
-	out 0x21,al
+	; ; disable PIC; I don't know
+	; mov al,0x10
+	; out 0x20,al
+	; out 0xa0,al
+	; mov al,32
+	; out 0x21,al
+	; out 0xa1,al
+	; mov al,4
+	; out 0x21,al
+	; mov al,2
+	; out 0xa1,al
+	; mov al,0xff
+	; out 0xa1,al
+	; out 0x21,al
 
-; go
+	; go
 	jmp SEG_INT_CODE16:enter_kernel-int_handler
 
-boot_cmd:	db "root=/dev/ram0", 0
+boot_cmd: db 0
 
 mem_table:
 	times 16 db 0

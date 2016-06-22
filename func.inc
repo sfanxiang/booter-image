@@ -146,8 +146,6 @@ empty_int_handler:
 ; this function is copied with interrupt handlers
 bits 16
 enter_kernel:
-	lidt [cs:OFFSET(idt_ptr_real)]
-
 	mov ax, 0x1000
 	mov ds, ax
 	mov es, ax
@@ -160,8 +158,8 @@ enter_kernel:
 	or byte [ds:0x211], 0x80	; loadflags
 	mov dword [ds:0x228], 0x99800	; cmd_line_ptr
 	mov byte [ds:0x210], 1	; type_of_loader
-	mov dword [ds:0x218], RAMDISK_ADDR	; ramdisk_image
-	mov dword [ds:0x21c], RAMDISK_SIZE	; ramdisk_size
+	; mov dword [ds:0x218], ebx	; ramdisk_image
+	; mov dword [ds:0x21c], RAMDISK_SIZE	; ramdisk_size
 
 	jmp 0x1020:0
 
